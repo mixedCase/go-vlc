@@ -4,10 +4,11 @@
 
 package vlc
 
-// #include "glue.h"
+//#include <stdlib.h>
+//#include <vlc/vlc.h>
 import "C"
 import (
-	"os"
+	"syscall"
 	"unsafe"
 )
 
@@ -27,7 +28,7 @@ func (this *Discoverer) Release() {
 // LocalizedName return the localzied discovery service name.
 func (this *Discoverer) LocalizedName() (s string, err error) {
 	if this.ptr != nil {
-		return "", os.EINVAL
+		return "", syscall.EINVAL
 	}
 
 	if c := C.libvlc_media_discoverer_localized_name(this.ptr); c != nil {
@@ -42,7 +43,7 @@ func (this *Discoverer) LocalizedName() (s string, err error) {
 // MediaList returns a list of media items.
 func (this *Discoverer) MediaList() (m *MediaList, err error) {
 	if this.ptr != nil {
-		return nil, os.EINVAL
+		return nil, syscall.EINVAL
 	}
 
 	if c := C.libvlc_media_discoverer_media_list(this.ptr); c != nil {
@@ -56,7 +57,7 @@ func (this *Discoverer) MediaList() (m *MediaList, err error) {
 // Note: This method does not increment the media reference count.
 func (this *Discoverer) Events() (*EventManager, error) {
 	if this.ptr == nil {
-		return nil, os.EINVAL
+		return nil, syscall.EINVAL
 	}
 
 	if c := C.libvlc_media_discoverer_event_manager(this.ptr); c != nil {
@@ -69,7 +70,7 @@ func (this *Discoverer) Events() (*EventManager, error) {
 // IsRunning returns true if the discovery service is currently running.
 func (this *Discoverer) IsRunning() (bool, error) {
 	if this.ptr == nil {
-		return false, os.EINVAL
+		return false, syscall.EINVAL
 	}
 	return C.libvlc_media_discoverer_is_running(this.ptr) != 0, checkError()
 }

@@ -23,9 +23,6 @@ func Test(t *testing.T) {
 
 	defer inst.Release()
 
-	inst.SetLogVerbosity(3)
-	fmt.Printf("Log level: %d\n", inst.LogVerbosity())
-
 	inst.StartUI("")
 	inst.Wait()
 }

@@ -4,16 +4,19 @@
 
 package vlc
 
-// #include "glue.h"
+//#include <stdlib.h>
+//#include <vlc/vlc.h>
+// extern void  goEventCB(const struct libvlc_event_t*, void*);
 // static int goAttach(libvlc_event_manager_t* em, libvlc_event_type_t et, void* userdata) {
-//    return libvlc_event_attach(em, et, goEventCB, userdata);
+// 	return libvlc_event_attach(em, et, goEventCB, userdata);
 // }
+//
 // static void goDetach(libvlc_event_manager_t* em, libvlc_event_type_t et, void* userdata) {
-//    libvlc_event_detach(em, et, goEventCB, userdata);
+// 	libvlc_event_detach(em, et, goEventCB, userdata);
 // }
 import "C"
 import (
-	"os"
+	"syscall"
 	"sync"
 	"unsafe"
 )
@@ -37,7 +40,7 @@ func NewEventManager(p *C.libvlc_event_manager_t) *EventManager {
 // we can use to detach the event at a later point.
 func (this *EventManager) Attach(et EventType, cb EventHandler, userdata interface{}) (id int, err error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 
 	id = this.getUniqId()
@@ -56,7 +59,7 @@ func (this *EventManager) Attach(et EventType, cb EventHandler, userdata interfa
 // Detach unregisters the given event id.
 func (this *EventManager) Detach(id int) (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	var ed *eventData
@@ -65,7 +68,7 @@ func (this *EventManager) Detach(id int) (err error) {
 	this.m.Lock()
 	if ed, ok = this.events[id]; !ok {
 		this.m.Unlock()
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	delete(this.events, id)
