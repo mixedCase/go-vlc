@@ -10,13 +10,13 @@ package main
 
 import (
 	"fmt"
-	vlc "github.com/jteeuwen/go-vlc"
+	vlc "github.com/cvanderschuere/go-vlc"
 	"os"
 	"time"
 )
 
 // Some random streaming video found through google.
-const uri = "http://www.yo-yo.org/mp4/yu.mp4"
+const uri = "http://freedownloads.last.fm/download/466248492/Aperture.mp3"
 
 func main() {
 	var inst *vlc.Instance

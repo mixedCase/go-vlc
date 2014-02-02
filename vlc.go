@@ -10,7 +10,8 @@ package vlc
 // #cgo  linux LDFLAGS: -L/usr/local/lib
 // #cgo darwin  CFLAGS: -I/usr/local/include
 // #cgo darwin LDFLAGS: -L/usr/local/lib
-// #include "glue.h"
+//#include <stdlib.h>
+//#include <vlc/vlc.h>
 import "C"
 import (
 	"errors"

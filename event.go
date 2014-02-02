@@ -4,7 +4,8 @@
 
 package vlc
 
-// #include "glue.h"
+//#include <stdlib.h>
+//#include <vlc/vlc.h>
 import "C"
 import (
 	"bytes"

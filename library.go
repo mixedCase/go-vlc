@@ -4,10 +4,11 @@
 
 package vlc
 
-// #include "glue.h"
+//#include <stdlib.h>
+//#include <vlc/vlc.h>
 import "C"
 import (
-	"os"
+	"syscall"
 )
 
 // A media library
@@ -18,7 +19,7 @@ type Library struct {
 // Retain increments the reference count of the instance.
 func (this *Library) Retain() (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 	C.libvlc_media_library_retain(this.ptr)
 	return
@@ -27,7 +28,7 @@ func (this *Library) Retain() (err error) {
 // Release decreases the reference count of the instance and destroys it when it reaches zero.
 func (this *Library) Release() (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	C.libvlc_media_library_release(this.ptr)
@@ -37,7 +38,7 @@ func (this *Library) Release() (err error) {
 // Load loads the library contents.
 func (this *Library) Load() error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 	C.libvlc_media_library_load(this.ptr)
 	return checkError()
@@ -46,7 +47,7 @@ func (this *Library) Load() error {
 // Items returns a list of all the media items in this library.
 func (this *Library) Items() (*MediaList, error) {
 	if this.ptr == nil {
-		return nil, os.EINVAL
+		return nil, syscall.EINVAL
 	}
 
 	if c := C.libvlc_media_library_media_list(this.ptr); c != nil {

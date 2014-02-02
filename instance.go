@@ -4,10 +4,11 @@
 
 package vlc
 
-// #include "glue.h"
+//#include <stdlib.h>
+//#include <vlc/vlc.h>
 import "C"
 import (
-	"os"
+	"syscall"
 	"unsafe"
 )
 
@@ -41,7 +42,7 @@ func New(argv []string) (i *Instance, err error) {
 // The initial reference count is 1 after vlc.New() returns.
 func (this *Instance) Retain() (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	C.libvlc_retain(this.ptr)
@@ -52,7 +53,7 @@ func (this *Instance) Retain() (err error) {
 // when it reaches zero.
 func (this *Instance) Release() (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	C.libvlc_release(this.ptr)
@@ -63,7 +64,7 @@ func (this *Instance) Release() (err error) {
 // Specify an empty name to use the default.
 func (this *Instance) StartUI(name string) (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	c := C.CString(name)
@@ -81,7 +82,7 @@ func (this *Instance) StartUI(name string) (err error) {
 // the user agent string when a protocol requires it.
 func (this *Instance) SetName(appname, httpname string) (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	ca := C.CString(appname)
@@ -98,19 +99,20 @@ func (this *Instance) SetName(appname, httpname string) (err error) {
 // You should start at least one interface first, using Instance.StartUI().
 func (this *Instance) Wait() error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	C.libvlc_wait(this.ptr)
 	return nil
 }
 
+/*
 // LogVerbosity returns the VLC messaging verbosity level.
 func (this *Instance) LogVerbosity() uint {
 	if this.ptr == nil {
 		return 0
 	}
-	return uint(C.libvlc_get_log_verbosity(this.ptr))
+	return uint(-1)
 }
 
 // SetLogVerbosity sets the VLC messaging verbosity level.
@@ -123,7 +125,7 @@ func (this *Instance) SetLogVerbosity(v uint) {
 // OpenLog opens a VLC message log instance.
 func (this *Instance) OpenLog() (*Log, error) {
 	if this.ptr == nil {
-		return nil, os.EINVAL
+		return nil, syscall.EINVAL
 	}
 
 	if c := C.libvlc_log_open(this.ptr); c != nil {
@@ -134,11 +136,12 @@ func (this *Instance) OpenLog() (*Log, error) {
 
 	return nil, checkError()
 }
+*/
 
 // OpenMediaUri loads a media instance from the given uri.
 func (this *Instance) OpenMediaUri(uri string) (*Media, error) {
 	if this.ptr == nil {
-		return nil, os.EINVAL
+		return nil, syscall.EINVAL
 	}
 
 	c := C.CString(uri)
@@ -154,7 +157,7 @@ func (this *Instance) OpenMediaUri(uri string) (*Media, error) {
 // OpenMediaFile loads a media instance from the given filesystem path.
 func (this *Instance) OpenMediaFile(path string) (*Media, error) {
 	if this.ptr == nil {
-		return nil, os.EINVAL
+		return nil, syscall.EINVAL
 	}
 
 	c := C.CString(path)
@@ -183,7 +186,7 @@ func (this *Instance) OpenMediaFile(path string) (*Media, error) {
 // descriptor should probably be rewound to the beginning with lseek().
 func (this *Instance) OpenMediaFd(fd int) (*Media, error) {
 	if this.ptr == nil {
-		return nil, os.EINVAL
+		return nil, syscall.EINVAL
 	}
 
 	if m := C.libvlc_media_new_fd(this.ptr, C.int(fd)); m != nil {
@@ -196,7 +199,7 @@ func (this *Instance) OpenMediaFd(fd int) (*Media, error) {
 // OpenMediaNode creates a media instance as an empty node with a given name.
 func (this *Instance) OpenMediaNode(name string) (*Media, error) {
 	if this.ptr == nil {
-		return nil, os.EINVAL
+		return nil, syscall.EINVAL
 	}
 
 	c := C.CString(name)
@@ -212,7 +215,7 @@ func (this *Instance) OpenMediaNode(name string) (*Media, error) {
 // NewPlayer creates an empty media player object.
 func (this *Instance) NewPlayer() (*Player, error) {
 	if this.ptr == nil {
-		return nil, os.EINVAL
+		return nil, syscall.EINVAL
 	}
 
 	if c := C.libvlc_media_player_new(this.ptr); c != nil {
@@ -225,7 +228,7 @@ func (this *Instance) NewPlayer() (*Player, error) {
 // NewList creates and initializes a new media list.
 func (this *Instance) NewList() (*MediaList, error) {
 	if this.ptr == nil {
-		return nil, os.EINVAL
+		return nil, syscall.EINVAL
 	}
 
 	if c := C.libvlc_media_list_new(this.ptr); c != nil {
@@ -238,7 +241,7 @@ func (this *Instance) NewList() (*MediaList, error) {
 // NewListPlayer creates an empty media list player object.
 func (this *Instance) NewListPlayer() (*ListPlayer, error) {
 	if this.ptr == nil {
-		return nil, os.EINVAL
+		return nil, syscall.EINVAL
 	}
 
 	if c := C.libvlc_media_list_player_new(this.ptr); c != nil {
@@ -251,7 +254,7 @@ func (this *Instance) NewListPlayer() (*ListPlayer, error) {
 // NewLibrary creates an empty media library.
 func (this *Instance) NewLibrary() (*Library, error) {
 	if this.ptr == nil {
-		return nil, os.EINVAL
+		return nil, syscall.EINVAL
 	}
 
 	if c := C.libvlc_media_library_new(this.ptr); c != nil {
@@ -264,7 +267,7 @@ func (this *Instance) NewLibrary() (*Library, error) {
 // Discoverer creates a new discover media service by name.
 func (this *Instance) Discoverer(name string) (*Discoverer, error) {
 	if this.ptr == nil {
-		return nil, os.EINVAL
+		return nil, syscall.EINVAL
 	}
 
 	s := C.CString(name)
@@ -280,7 +283,7 @@ func (this *Instance) Discoverer(name string) (*Discoverer, error) {
 // VlmRelease releases the vlm instance associated with this instance.
 func (this *Instance) VlmRelease() error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	C.libvlc_vlm_release(this.ptr)
@@ -298,7 +301,7 @@ func (this *Instance) VlmRelease() error {
 //
 func (this *Instance) VlmAddBroadcast(name, input, output string, options []string, enabled, loop bool) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	a := C.CString(name)
@@ -343,7 +346,7 @@ func (this *Instance) VlmAddBroadcast(name, input, output string, options []stri
 //
 func (this *Instance) VlmAddVOD(name, input, output, mux string, options []string, enabled bool) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	a := C.CString(name)
@@ -378,7 +381,7 @@ func (this *Instance) VlmAddVOD(name, input, output, mux string, options []strin
 // VlmDelete deletes the given media (VOD or broadcast).
 func (this *Instance) VlmDelete(name string) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	c := C.CString(name)
@@ -391,7 +394,7 @@ func (this *Instance) VlmDelete(name string) error {
 // VlmSetEnabled enables or disables the given media (VOD or broadcast).
 func (this *Instance) VlmSetEnabled(name string, toggle bool) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	c := C.CString(name)
@@ -408,7 +411,7 @@ func (this *Instance) VlmSetEnabled(name string, toggle bool) error {
 // VlmSetLoop enables or disables the given media's loop state (VOD or broadcast).
 func (this *Instance) VlmSetLoop(name string, toggle bool) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	c := C.CString(name)
@@ -425,7 +428,7 @@ func (this *Instance) VlmSetLoop(name string, toggle bool) error {
 // VlmSetOutput sets the output for the given media (VOD or broadcast).
 func (this *Instance) VlmSetOutput(name, output string) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	a := C.CString(name)
@@ -440,7 +443,7 @@ func (this *Instance) VlmSetOutput(name, output string) error {
 // This will delete all existing inputs and add the specified one.
 func (this *Instance) VlmSetInput(name, input string) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	a := C.CString(name)
@@ -454,7 +457,7 @@ func (this *Instance) VlmSetInput(name, input string) error {
 // VlmAddInput adds an input MRL for the given media (VOD or broadcast).
 func (this *Instance) VlmAddInput(name, input string) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	a := C.CString(name)
@@ -468,7 +471,7 @@ func (this *Instance) VlmAddInput(name, input string) error {
 // VlmSetMux sets a media's VOD muxer.
 func (this *Instance) VlmSetMux(name, mux string) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	a := C.CString(name)
@@ -491,7 +494,7 @@ func (this *Instance) VlmSetMux(name, mux string) error {
 //
 func (this *Instance) VlmChangeMedia(name, input, output string, options []string, enabled, loop bool) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	a := C.CString(name)
@@ -529,7 +532,7 @@ func (this *Instance) VlmChangeMedia(name, input, output string, options []strin
 // VlmPlay plays the named broadcast.
 func (this *Instance) VlmPlay(name string) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	a := C.CString(name)
@@ -541,7 +544,7 @@ func (this *Instance) VlmPlay(name string) error {
 // VlmStop halts playback of the named broadcast.
 func (this *Instance) VlmStop(name string) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	a := C.CString(name)
@@ -553,7 +556,7 @@ func (this *Instance) VlmStop(name string) error {
 // VlmPause pauses playback of the named broadcast.
 func (this *Instance) VlmPause(name string) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	a := C.CString(name)
@@ -565,7 +568,7 @@ func (this *Instance) VlmPause(name string) error {
 // VlmSeek seeks in the named broadcast.
 func (this *Instance) VlmSeek(name string, percentage float32) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	a := C.CString(name)
@@ -579,7 +582,7 @@ func (this *Instance) VlmSeek(name string, percentage float32) error {
 // Note: This function is mainly intended for debugging use,
 func (this *Instance) VlmMediaInfo(name string) (s string, err error) {
 	if this.ptr == nil {
-		return "", os.EINVAL
+		return "", syscall.EINVAL
 	}
 
 	a := C.CString(name)
@@ -598,7 +601,7 @@ func (this *Instance) VlmMediaInfo(name string) (s string, err error) {
 // VlmPosition returns the instance position by name or instance id.
 func (this *Instance) VlmPosition(name string, id int) (float32, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 
 	a := C.CString(name)
@@ -609,7 +612,7 @@ func (this *Instance) VlmPosition(name string, id int) (float32, error) {
 // VlmTime returns the instance time by name or instance id.
 func (this *Instance) VlmTime(name string, id int) (int, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 
 	a := C.CString(name)
@@ -620,7 +623,7 @@ func (this *Instance) VlmTime(name string, id int) (int, error) {
 // VlmLength returns the instance length by name or instance id.
 func (this *Instance) VlmLength(name string, id int) (int, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 
 	a := C.CString(name)
@@ -631,7 +634,7 @@ func (this *Instance) VlmLength(name string, id int) (int, error) {
 // VlmRate returns the instance playback rate by name or instance id.
 func (this *Instance) VlmRate(name string, id int) (int, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 
 	a := C.CString(name)
@@ -642,7 +645,7 @@ func (this *Instance) VlmRate(name string, id int) (int, error) {
 // VlmEvents returns an event manager for a VLM instance.
 func (this *Instance) VlmEvents() (*EventManager, error) {
 	if this.ptr == nil {
-		return nil, os.EINVAL
+		return nil, syscall.EINVAL
 	}
 
 	if c := C.libvlc_vlm_get_event_manager(this.ptr); c != nil {

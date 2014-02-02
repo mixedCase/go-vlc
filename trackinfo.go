@@ -4,7 +4,8 @@
 
 package vlc
 
-// #include "glue.h"
+//#include <stdlib.h>
+//#include <vlc/vlc.h>
 import "C"
 import (
 	"bytes"
@@ -41,7 +42,7 @@ type TrackDescription struct {
 // Release releases memory for this instance.
 func (this *TrackDescription) Release() {
 	if this.ptr != nil {
-		C.libvlc_track_description_release(this.ptr)
+		C.libvlc_track_description_list_release(this.ptr)
 		this.ptr = nil
 	}
 }

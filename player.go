@@ -4,13 +4,18 @@
 
 package vlc
 
-// #include "glue.h"
+//#include <stdlib.h>
+//#include <vlc/vlc.h>
+// extern void* goLockCB(void*, void**);
+// extern void  goUnlockCB(void*, void*, void* const*);
+// extern void  goDisplayCB(void*, void*);
+//
 // static void goSetCallbacks(libvlc_media_player_t* mp, void* userdata) {
 //    libvlc_video_set_callbacks(mp, goLockCB, goUnlockCB, goDisplayCB, userdata);
 // }
 import "C"
 import (
-	"os"
+	"syscall"
 	"unsafe"
 )
 
@@ -21,7 +26,7 @@ type Player struct {
 // Retain increments the reference count of this player.
 func (this *Player) Retain() (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	C.libvlc_media_player_retain(this.ptr)
@@ -32,7 +37,7 @@ func (this *Player) Retain() (err error) {
 // when it reaches zero.
 func (this *Player) Release() (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	C.libvlc_media_player_release(this.ptr)
@@ -42,7 +47,7 @@ func (this *Player) Release() (err error) {
 // Media returns the media currently associated with this player.
 func (this *Player) Media() (*Media, error) {
 	if this.ptr == nil {
-		return nil, os.EINVAL
+		return nil, syscall.EINVAL
 	}
 
 	if c := C.libvlc_media_player_get_media(this.ptr); c != nil {
@@ -56,7 +61,7 @@ func (this *Player) Media() (*Media, error) {
 // loaded, it will be destroyed.
 func (this *Player) SetMedia(m *Media) error {
 	if this.ptr == nil || m.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	C.libvlc_media_player_set_media(this.ptr, m.ptr)
@@ -66,7 +71,7 @@ func (this *Player) SetMedia(m *Media) error {
 // Events returns an event manager for this player.
 func (this *Player) Events() (*EventManager, error) {
 	if this.ptr == nil {
-		return nil, os.EINVAL
+		return nil, syscall.EINVAL
 	}
 
 	if c := C.libvlc_media_player_event_manager(this.ptr); c != nil {
@@ -87,7 +92,7 @@ func (this *Player) IsPlaying() bool {
 // Play begins playback.
 func (this *Player) Play() (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	if C.libvlc_media_player_play(this.ptr) < 0 {
@@ -101,7 +106,7 @@ func (this *Player) Play() (err error) {
 // Has no effect if no media is loaded.
 func (this *Player) TogglePause(pause bool) (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	if pause {
@@ -116,7 +121,7 @@ func (this *Player) TogglePause(pause bool) (err error) {
 // Has no effect if no media is loaded.
 func (this *Player) Pause() (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	C.libvlc_media_player_pause(this.ptr)
@@ -127,7 +132,7 @@ func (this *Player) Pause() (err error) {
 // Has no effect if no media is loaded.
 func (this *Player) Stop() (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	C.libvlc_media_player_stop(this.ptr)
@@ -152,7 +157,7 @@ func (this *Player) Stop() (err error) {
 // the return value from the lock callback.
 func (this *Player) SetCallbacks(lh LockHandler, uh UnlockHandler, dh DisplayHandler, userdata interface{}) (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	C.goSetCallbacks(this.ptr, unsafe.Pointer(&memRenderReq{lh, uh, dh, userdata}))
@@ -169,7 +174,7 @@ func (this *Player) SetCallbacks(lh LockHandler, uh UnlockHandler, dh DisplayHan
 // in bytes.
 func (this *Player) SetFormat(chroma string, width, height, pitch uint) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	c := C.CString(chroma)
@@ -204,7 +209,7 @@ func (this *Player) SetFormat(chroma string, width, height, pitch uint) error {
 // You can find a live example in VLCVideoView in VLCKit.framework.
 func (this *Player) SetNSObject(drawable uintptr) (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	C.libvlc_media_player_set_nsobject(this.ptr, unsafe.Pointer(drawable))
@@ -214,7 +219,7 @@ func (this *Player) SetNSObject(drawable uintptr) (err error) {
 // NSObject returns the NSView handler previously set with Player.SetNSObject().
 func (this *Player) NSObject() (drawable uintptr, err error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 
 	return uintptr(C.libvlc_media_player_get_nsobject(this.ptr)), checkError()
@@ -223,7 +228,7 @@ func (this *Player) NSObject() (drawable uintptr, err error) {
 // SetAGL set the agl handler where the media player should render its video output.
 func (this *Player) SetAGL(drawable uint32) (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	C.libvlc_media_player_set_agl(this.ptr, C.uint32_t(drawable))
@@ -233,7 +238,7 @@ func (this *Player) SetAGL(drawable uint32) (err error) {
 // AGL returns the agl handler where the media player should render its video output.
 func (this *Player) AGL() (drawable uint32, err error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 
 	return uint32(C.libvlc_media_player_get_agl(this.ptr)), checkError()
@@ -248,7 +253,7 @@ func (this *Player) AGL() (drawable uint32, err error) {
 // server is the same as the one the VLC instance has been configured with.
 func (this *Player) SetXWindow(drawable uint32) (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	C.libvlc_media_player_set_xwindow(this.ptr, C.uint32_t(drawable))
@@ -260,7 +265,7 @@ func (this *Player) SetXWindow(drawable uint32) (err error) {
 // not currently using it (for instance if it is playing an audio-only input).
 func (this *Player) XWindow() (drawable uint32, err error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 
 	return uint32(C.libvlc_media_player_get_xwindow(this.ptr)), checkError()
@@ -271,7 +276,7 @@ func (this *Player) XWindow() (drawable uint32, err error) {
 // output support, then this has no effects.
 func (this *Player) SetHwnd(drawable uintptr) (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	C.libvlc_media_player_set_hwnd(this.ptr, unsafe.Pointer(drawable))
@@ -283,7 +288,7 @@ func (this *Player) SetHwnd(drawable uintptr) (err error) {
 // outputting any video to it.
 func (this *Player) Hwnd() (drawable uintptr, err error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 
 	return uintptr(C.libvlc_media_player_get_hwnd(this.ptr)), checkError()
@@ -292,7 +297,7 @@ func (this *Player) Hwnd() (drawable uintptr, err error) {
 // Length returns the current movie length in milliseconds.
 func (this *Player) Length() (int64, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return int64(C.libvlc_media_player_get_length(this.ptr)), checkError()
 }
@@ -300,7 +305,7 @@ func (this *Player) Length() (int64, error) {
 // Time returns the current movie time in milliseconds.
 func (this *Player) Time() (int64, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return int64(C.libvlc_media_player_get_time(this.ptr)), checkError()
 }
@@ -316,7 +321,7 @@ func (this *Player) SetTime(v int64) {
 // Position returns the current movie position.
 func (this *Player) Position() (float32, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return float32(C.libvlc_media_player_get_position(this.ptr)), checkError()
 }
@@ -332,7 +337,7 @@ func (this *Player) SetPosition(v float32) {
 // ChapterCount returns the number of available movie chapters.
 func (this *Player) ChapterCount() (int, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return int(C.libvlc_media_player_get_chapter_count(this.ptr)), checkError()
 }
@@ -340,7 +345,7 @@ func (this *Player) ChapterCount() (int, error) {
 // Chapter returns the current movie chapter.
 func (this *Player) Chapter() (int, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return int(C.libvlc_media_player_get_chapter(this.ptr)), checkError()
 }
@@ -364,7 +369,7 @@ func (this *Player) WillPlay() bool {
 // TitleChapterCount returns the number of available movie chapters for the given title.
 func (this *Player) TitleChapterCount(title int) (int, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return int(C.libvlc_media_player_get_chapter_count_for_title(this.ptr, C.int(title))), checkError()
 }
@@ -372,7 +377,7 @@ func (this *Player) TitleChapterCount(title int) (int, error) {
 // TitleCount returns the number of available movie titles.
 func (this *Player) TitleCount(title int) (int, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return int(C.libvlc_media_player_get_title_count(this.ptr)), checkError()
 }
@@ -380,7 +385,7 @@ func (this *Player) TitleCount(title int) (int, error) {
 // Title returns the current movie title.
 func (this *Player) Title() (int, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return int(C.libvlc_media_player_get_title(this.ptr)), checkError()
 }
@@ -395,7 +400,7 @@ func (this *Player) SetTitle(v int) {
 // PreviousChapter sets the previous chapter if applicable.
 func (this *Player) PreviousChapter() (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 	C.libvlc_media_player_previous_chapter(this.ptr)
 	return checkError()
@@ -404,7 +409,7 @@ func (this *Player) PreviousChapter() (err error) {
 // NextChapter sets the next chapter if applicable.
 func (this *Player) NextChapter() (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 	C.libvlc_media_player_next_chapter(this.ptr)
 	return checkError()
@@ -415,7 +420,7 @@ func (this *Player) NextChapter() (err error) {
 // different from the real playback rate.
 func (this *Player) Rate() (float32, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return float32(C.libvlc_media_player_get_rate(this.ptr)), checkError()
 }
@@ -423,7 +428,7 @@ func (this *Player) Rate() (float32, error) {
 // SetRate sets the requested movie playback rate.
 func (this *Player) SetRate(v float32) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 	C.libvlc_media_player_set_rate(this.ptr, C.float(v))
 	return checkError()
@@ -432,7 +437,7 @@ func (this *Player) SetRate(v float32) error {
 // State returns the current movie state.
 func (this *Player) State() (MediaState, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return MediaState(C.libvlc_media_player_get_state(this.ptr)), checkError()
 }
@@ -440,7 +445,7 @@ func (this *Player) State() (MediaState, error) {
 // Fps returns the current movie frame rate.
 func (this *Player) Fps() (float32, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return float32(C.libvlc_media_player_get_fps(this.ptr)), checkError()
 }
@@ -448,7 +453,7 @@ func (this *Player) Fps() (float32, error) {
 // OutputCount returns the number of outputs the current media has.
 func (this *Player) OutputCount() (int, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return int(C.libvlc_media_player_has_vout(this.ptr)), checkError()
 }
@@ -456,7 +461,7 @@ func (this *Player) OutputCount() (int, error) {
 // CanSeek returns whether or not seeking is allowed for the current media.
 func (this *Player) CanSeek() (bool, error) {
 	if this.ptr == nil {
-		return false, os.EINVAL
+		return false, syscall.EINVAL
 	}
 	return C.libvlc_media_player_is_seekable(this.ptr) != 0, checkError()
 }
@@ -464,7 +469,7 @@ func (this *Player) CanSeek() (bool, error) {
 // CanPause returns whether or not pause/resume is allowed for the current media.
 func (this *Player) CanPause() (bool, error) {
 	if this.ptr == nil {
-		return false, os.EINVAL
+		return false, syscall.EINVAL
 	}
 	return C.libvlc_media_player_can_pause(this.ptr) != 0, checkError()
 }
@@ -472,7 +477,7 @@ func (this *Player) CanPause() (bool, error) {
 // NextFrame jumps to the next frame if applicable.
 func (this *Player) NextFrame() error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 	C.libvlc_media_player_next_frame(this.ptr)
 	return checkError()
@@ -484,7 +489,7 @@ func (this *Player) NextFrame() error {
 // Note: The same limitations apply to this as to Player.SetFullscreen()
 func (this *Player) ToggleFullscreen() error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 	C.libvlc_toggle_fullscreen(this.ptr)
 	return checkError()
@@ -501,7 +506,7 @@ func (this *Player) ToggleFullscreen() error {
 // normal parent when disabling fullscreen.
 func (this *Player) SetFullscreen(toggle bool) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	if toggle {
@@ -516,7 +521,7 @@ func (this *Player) SetFullscreen(toggle bool) error {
 // Fullscreen returns wether or not we are currently in fullscreen mode.
 func (this *Player) Fullscreen() (bool, error) {
 	if this.ptr == nil {
-		return false, os.EINVAL
+		return false, syscall.EINVAL
 	}
 	return C.libvlc_get_fullscreen(this.ptr) != 0, checkError()
 }
@@ -533,7 +538,7 @@ func (this *Player) Fullscreen() (bool, error) {
 // Note: This function is only implemented for X11 and Win32 at the moment.
 func (this *Player) SetKeyInput(toggle bool) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	if toggle {
@@ -557,7 +562,7 @@ func (this *Player) SetKeyInput(toggle bool) error {
 // Note: This function is only implemented for X11 and Win32 at the moment.
 func (this *Player) SetMouseInput(toggle bool) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	if toggle {
@@ -573,7 +578,7 @@ func (this *Player) SetMouseInput(toggle bool) error {
 // vidnum is the number of the target video. Most commonly starts at 0.
 func (this *Player) Size(vidnum uint) (width, height uint, err error) {
 	if this.ptr == nil {
-		return 0, 0, os.EINVAL
+		return 0, 0, syscall.EINVAL
 	}
 
 	var w, h C.uint
@@ -599,7 +604,7 @@ func (this *Player) Size(vidnum uint) (width, height uint, err error) {
 // vidnum is the number of the target video. Most commonly starts at 0.
 func (this *Player) Cursor(vidnum uint) (cx, cy int, err error) {
 	if this.ptr == nil {
-		return 0, 0, os.EINVAL
+		return 0, 0, syscall.EINVAL
 	}
 
 	var x, y C.int
@@ -614,7 +619,7 @@ func (this *Player) Cursor(vidnum uint) (cx, cy int, err error) {
 // Note: Not all video outputs support scaling.
 func (this *Player) Scale() (float32, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return float32(C.libvlc_video_get_scale(this.ptr)), checkError()
 }
@@ -627,7 +632,7 @@ func (this *Player) Scale() (float32, error) {
 // Note: Not all video outputs support scaling.
 func (this *Player) SetScale(v float32) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 	C.libvlc_video_set_scale(this.ptr, C.float(v))
 	return checkError()
@@ -636,7 +641,7 @@ func (this *Player) SetScale(v float32) error {
 // Aspect returns the current aspect ratio.
 func (this *Player) Aspect() (s string, err error) {
 	if this.ptr == nil {
-		return "", os.EINVAL
+		return "", syscall.EINVAL
 	}
 
 	if c := C.libvlc_video_get_aspect_ratio(this.ptr); c != nil {
@@ -651,7 +656,7 @@ func (this *Player) Aspect() (s string, err error) {
 // SetAspect sets the current aspect ratio.
 func (this *Player) SetAspect(v string) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 	c := C.CString(v)
 	C.libvlc_video_set_aspect_ratio(this.ptr, c)
@@ -662,7 +667,7 @@ func (this *Player) SetAspect(v string) error {
 // SubTile returns the current video subtitle or -1 if none is set.
 func (this *Player) SubTile() (int, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return int(C.libvlc_video_get_spu(this.ptr)), checkError()
 }
@@ -670,7 +675,7 @@ func (this *Player) SubTile() (int, error) {
 // SubTileCount returns the number of available subtitles.
 func (this *Player) SubTileCount() (int, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return int(C.libvlc_video_get_spu_count(this.ptr)), checkError()
 }
@@ -680,7 +685,7 @@ func (this *Player) SubTileCount() (int, error) {
 // Note: make sure to call TrackDescriptionList.Release() when you are done with it.
 func (this *Player) SubTileDescription() (TrackDescriptionList, error) {
 	if this.ptr == nil {
-		return nil, os.EINVAL
+		return nil, syscall.EINVAL
 	}
 
 	if c := C.libvlc_video_get_spu_description(this.ptr); c != nil {
@@ -693,12 +698,12 @@ func (this *Player) SubTileDescription() (TrackDescriptionList, error) {
 }
 
 // SetSubtitle sets the current subtitle track.
-func (this *Player) SetSubtitle(s uint) (err error) {
+func (this *Player) SetSubtitle(s int) (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
-	if C.libvlc_video_set_spu(this.ptr, C.uint(s)) != 0 {
+	if C.libvlc_video_set_spu(this.ptr, C.int(s)) != 0 {
 		err = checkError()
 	}
 
@@ -708,7 +713,7 @@ func (this *Player) SetSubtitle(s uint) (err error) {
 // SetSubtitle sets the current subtitle from a file.
 func (this *Player) SetSubtitleFile(path string) (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	c := C.CString(path)
@@ -722,7 +727,7 @@ func (this *Player) SetSubtitleFile(path string) (err error) {
 // Note: make sure to call TrackDescriptionList.Release() when you are done with it.
 func (this *Player) ChapterDescription(title int) (TrackDescriptionList, error) {
 	if this.ptr == nil {
-		return nil, os.EINVAL
+		return nil, syscall.EINVAL
 	}
 
 	if c := C.libvlc_video_get_chapter_description(this.ptr, C.int(title)); c != nil {
@@ -737,7 +742,7 @@ func (this *Player) ChapterDescription(title int) (TrackDescriptionList, error) 
 // CropGeometry returns the current crop filter geometry.
 func (this *Player) CropGeometry() (s string, err error) {
 	if this.ptr == nil {
-		return "", os.EINVAL
+		return "", syscall.EINVAL
 	}
 
 	if c := C.libvlc_video_get_crop_geometry(this.ptr); c != nil {
@@ -752,7 +757,7 @@ func (this *Player) CropGeometry() (s string, err error) {
 // string to clear the filter.
 func (this *Player) SetCropGeometry(s string) (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	var c *C.char
@@ -769,7 +774,7 @@ func (this *Player) SetCropGeometry(s string) (err error) {
 // Teletext returns the current requested teletext page.
 func (this *Player) Teletext() (int, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return int(C.libvlc_video_get_teletext(this.ptr)), checkError()
 }
@@ -777,7 +782,7 @@ func (this *Player) Teletext() (int, error) {
 // SetTeletext sets a new teletext page to retrieve.
 func (this *Player) SetTeletext(page int) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	C.libvlc_video_set_teletext(this.ptr, C.int(page))
@@ -787,7 +792,7 @@ func (this *Player) SetTeletext(page int) error {
 // ToggleTeletext toggles transparent teletext status on video output.
 func (this *Player) ToggleTeletext() error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	C.libvlc_toggle_teletext(this.ptr)
@@ -797,7 +802,7 @@ func (this *Player) ToggleTeletext() error {
 // VideoTrackCount returns the number of video tracks in the current media.
 func (this *Player) VideoTrackCount() (int, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return int(C.libvlc_video_get_track_count(this.ptr)), checkError()
 }
@@ -807,7 +812,7 @@ func (this *Player) VideoTrackCount() (int, error) {
 // Note: make sure to call TrackDescriptionList.Release() when you are done with it.
 func (this *Player) VideoDescription() (TrackDescriptionList, error) {
 	if this.ptr == nil {
-		return nil, os.EINVAL
+		return nil, syscall.EINVAL
 	}
 
 	if c := C.libvlc_video_get_track_description(this.ptr); c != nil {
@@ -822,7 +827,7 @@ func (this *Player) VideoDescription() (TrackDescriptionList, error) {
 // VideoTrack returns the current video track.
 func (this *Player) VideoTrack() (int, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return int(C.libvlc_video_get_track(this.ptr)), checkError()
 }
@@ -830,7 +835,7 @@ func (this *Player) VideoTrack() (int, error) {
 // SetVideoTrack sets the current video track.
 func (this *Player) SetVideoTrack(track int) (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	if C.libvlc_video_set_track(this.ptr, C.int(track)) != 0 {
@@ -849,7 +854,7 @@ func (this *Player) SetVideoTrack(track int) (err error) {
 // Vidnum is the number of the video output (typically 0 for the first/only one)
 func (this *Player) TakeSnapshot(path string, vidnum, width, height uint) (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	c := C.CString(path)
@@ -866,7 +871,7 @@ func (this *Player) TakeSnapshot(path string, vidnum, width, height uint) (err e
 // the filter.
 func (this *Player) SetDeinterlace(f string) (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	var c *C.char
@@ -882,7 +887,7 @@ func (this *Player) SetDeinterlace(f string) (err error) {
 // MarqueeOption returns an integer marquee option value.
 func (this *Player) MarqueeOption(option MarqueeOption) (int, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return int(C.libvlc_video_get_marquee_int(this.ptr, C.uint(option))), checkError()
 }
@@ -890,7 +895,7 @@ func (this *Player) MarqueeOption(option MarqueeOption) (int, error) {
 // SetMarqueeOption sets an integer marquee option value.
 func (this *Player) SetMarqueeOption(option MarqueeOption, v int) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 	C.libvlc_video_set_marquee_int(this.ptr, C.uint(option), C.int(v))
 	return checkError()
@@ -899,7 +904,7 @@ func (this *Player) SetMarqueeOption(option MarqueeOption, v int) error {
 // MarqueeOptionString returns a string marquee option value.
 func (this *Player) MarqueeOptionString(option MarqueeOption) (s string, err error) {
 	if this.ptr == nil {
-		return "", os.EINVAL
+		return "", syscall.EINVAL
 	}
 
 	if c := C.libvlc_video_get_marquee_string(this.ptr, C.uint(option)); c != nil {
@@ -913,7 +918,7 @@ func (this *Player) MarqueeOptionString(option MarqueeOption) (s string, err err
 // SetMarqueeOptionString sets a string marquee option value.
 func (this *Player) SetMarqueeOptionString(option MarqueeOption, s string) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 	c := C.CString(s)
 	C.libvlc_video_set_marquee_string(this.ptr, C.uint(option), c)
@@ -924,7 +929,7 @@ func (this *Player) SetMarqueeOptionString(option MarqueeOption, s string) error
 // LogoOption returns an integer logo option.
 func (this *Player) LogoOption(option LogoOption) (int, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return int(C.libvlc_video_get_logo_int(this.ptr, C.uint(option))), checkError()
 }
@@ -935,7 +940,7 @@ func (this *Player) LogoOption(option LogoOption) (int, error) {
 // stopping (arg 0) the logo filter.
 func (this *Player) SetLogoOption(option MarqueeOption, v int) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 	C.libvlc_video_set_logo_int(this.ptr, C.uint(option), C.int(v))
 	return checkError()
@@ -944,7 +949,7 @@ func (this *Player) SetLogoOption(option MarqueeOption, v int) error {
 // SetLogoOptionString sets a string logo option value.
 func (this *Player) SetLogoOptionString(option LogoOption, s string) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 	c := C.CString(s)
 	C.libvlc_video_set_logo_string(this.ptr, C.uint(option), c)
@@ -955,7 +960,7 @@ func (this *Player) SetLogoOptionString(option LogoOption, s string) error {
 // AdjustOption returns an integer adjustment option.
 func (this *Player) AdjustOption(option AdjustOption) (int, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return int(C.libvlc_video_get_adjust_int(this.ptr, C.uint(option))), checkError()
 }
@@ -966,7 +971,7 @@ func (this *Player) AdjustOption(option AdjustOption) (int, error) {
 // stopping (arg 0) the logo filter.
 func (this *Player) SetAdjustOption(option AdjustOption, v int) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 	C.libvlc_video_set_logo_int(this.ptr, C.uint(option), C.int(v))
 	return checkError()
@@ -975,7 +980,7 @@ func (this *Player) SetAdjustOption(option AdjustOption, v int) error {
 // AdjustOptionFloat returns a float adjustment option.
 func (this *Player) AdjustOptionFloat(option AdjustOption) (float32, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return float32(C.libvlc_video_get_adjust_float(this.ptr, C.uint(option))), checkError()
 }
@@ -984,7 +989,7 @@ func (this *Player) AdjustOptionFloat(option AdjustOption) (float32, error) {
 // Options that take a different type value are ignored.
 func (this *Player) SetAdjustOptionFloat(option AdjustOption, v float32) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 	C.libvlc_video_set_adjust_float(this.ptr, C.uint(option), C.float(v))
 	return checkError()
@@ -995,7 +1000,7 @@ func (this *Player) SetAdjustOptionFloat(option AdjustOption, v float32) error {
 // Note: Be sure to call AudioOutputList.Release() after you are done with the list.
 func (this *Player) AudioOutput() (AudioOutputList, error) {
 	if this.ptr == nil {
-		return nil, os.EINVAL
+		return nil, syscall.EINVAL
 	}
 
 	if c := C.libvlc_audio_output_list_get(this.ptr); c != nil {
@@ -1011,7 +1016,7 @@ func (this *Player) AudioOutput() (AudioOutputList, error) {
 // stop and play.
 func (this *Player) SetAudioOutput(output string) (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	c := C.CString(output)
@@ -1028,7 +1033,7 @@ func (this *Player) SetAudioOutput(output string) (err error) {
 // are hardware oriented like analog or digital output of sound cards.
 func (this *Player) AudioDeviceCount(output string) (int, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 
 	c := C.CString(output)
@@ -1040,7 +1045,7 @@ func (this *Player) AudioDeviceCount(output string) (int, error) {
 // If it is not available, the short name is given.
 func (this *Player) AudioDeviceName(output string, device int) (s string, err error) {
 	if this.ptr == nil {
-		return "", os.EINVAL
+		return "", syscall.EINVAL
 	}
 
 	c := C.CString(output)
@@ -1058,7 +1063,7 @@ func (this *Player) AudioDeviceName(output string, device int) (s string, err er
 // AudioDeviceId returns the id of an audio device.
 func (this *Player) AudioDeviceId(output string, device int) (s string, err error) {
 	if this.ptr == nil {
-		return "", os.EINVAL
+		return "", syscall.EINVAL
 	}
 
 	c := C.CString(output)
@@ -1077,7 +1082,7 @@ func (this *Player) AudioDeviceId(output string, device int) (s string, err erro
 // stop and play.
 func (this *Player) SetAudioDevice(output, deviceid string) (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	a := C.CString(output)
@@ -1093,7 +1098,7 @@ func (this *Player) SetAudioDevice(output, deviceid string) (err error) {
 // sound, 2.1, 5.1 etc
 func (this *Player) AudioDeviceType() (AudioDevice, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 
 	return AudioDevice(C.libvlc_audio_output_get_device_type(this.ptr)), checkError()
@@ -1104,7 +1109,7 @@ func (this *Player) AudioDeviceType() (AudioDevice, error) {
 // sound, 2.1, 5.1 etc
 func (this *Player) SetAudioDeviceType(ad AudioDevice) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	C.libvlc_audio_output_set_device_type(this.ptr, C.int(ad))
@@ -1114,7 +1119,7 @@ func (this *Player) SetAudioDeviceType(ad AudioDevice) error {
 // ToggleMute toggles the current mute status.
 func (this *Player) ToggleMute() error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 	C.libvlc_audio_toggle_mute(this.ptr)
 	return checkError()
@@ -1123,7 +1128,7 @@ func (this *Player) ToggleMute() error {
 // IsMute returns whether or not mute is enabled.
 func (this *Player) IsMute() (bool, error) {
 	if this.ptr == nil {
-		return false, os.EINVAL
+		return false, syscall.EINVAL
 	}
 	return C.libvlc_audio_get_mute(this.ptr) != 0, checkError()
 }
@@ -1131,7 +1136,7 @@ func (this *Player) IsMute() (bool, error) {
 // SetMute sets mute mode to the specified value.
 func (this *Player) SetMute(toggle bool) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	if toggle {
@@ -1146,7 +1151,7 @@ func (this *Player) SetMute(toggle bool) error {
 // Volume returns the current audio level.
 func (this *Player) Volume() (int, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return int(C.libvlc_audio_get_volume(this.ptr)), checkError()
 }
@@ -1154,7 +1159,7 @@ func (this *Player) Volume() (int, error) {
 // SetVolume sets the current audio level.
 func (this *Player) SetVolume(v int) error {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	C.libvlc_audio_set_volume(this.ptr, C.int(v))
@@ -1164,7 +1169,7 @@ func (this *Player) SetVolume(v int) error {
 // AudioTrackCount returns the number of available audio tracks.
 func (this *Player) AudioTrackCount() (int, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return int(C.libvlc_audio_get_track_count(this.ptr)), checkError()
 }
@@ -1174,7 +1179,7 @@ func (this *Player) AudioTrackCount() (int, error) {
 // Note: make sure to call TrackDescriptionList.Release() when you are done with it.
 func (this *Player) AudioDescription() (TrackDescriptionList, error) {
 	if this.ptr == nil {
-		return nil, os.EINVAL
+		return nil, syscall.EINVAL
 	}
 
 	if c := C.libvlc_audio_get_track_description(this.ptr); c != nil {
@@ -1189,7 +1194,7 @@ func (this *Player) AudioDescription() (TrackDescriptionList, error) {
 // AudioTrack returns the current audio track.
 func (this *Player) AudioTrack() (int, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return int(C.libvlc_audio_get_track(this.ptr)), checkError()
 }
@@ -1197,7 +1202,7 @@ func (this *Player) AudioTrack() (int, error) {
 // SetAudioTrack sets the current audio track.
 func (this *Player) SetAudioTrack(track int) (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	if C.libvlc_audio_set_track(this.ptr, C.int(track)) != 0 {
@@ -1210,7 +1215,7 @@ func (this *Player) SetAudioTrack(track int) (err error) {
 // AudioChannel returns the current audio channel.
 func (this *Player) AudioChannel() (int, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return int(C.libvlc_audio_get_channel(this.ptr)), checkError()
 }
@@ -1218,7 +1223,7 @@ func (this *Player) AudioChannel() (int, error) {
 // SetAudioChannel sets the current audio channel.
 func (this *Player) SetAudioChannel(channel int) (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	if C.libvlc_audio_set_channel(this.ptr, C.int(channel)) != 0 {
@@ -1231,7 +1236,7 @@ func (this *Player) SetAudioChannel(channel int) (err error) {
 // AudioDelay returns the current audio delay.
 func (this *Player) AudioDelay() (int64, error) {
 	if this.ptr == nil {
-		return 0, os.EINVAL
+		return 0, syscall.EINVAL
 	}
 	return int64(C.libvlc_audio_get_delay(this.ptr)), checkError()
 }
@@ -1239,7 +1244,7 @@ func (this *Player) AudioDelay() (int64, error) {
 // SetAudioDelay sets the current audio delay.
 func (this *Player) SetAudioDelay(delay int64) (err error) {
 	if this.ptr == nil {
-		return os.EINVAL
+		return syscall.EINVAL
 	}
 
 	if C.libvlc_audio_set_delay(this.ptr, C.int64_t(delay)) != 0 {
