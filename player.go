@@ -200,7 +200,7 @@ func (this *Player) SetFormat(chroma string, width, height, pitch uint) error {
 //
 // If you want to use it along with Qt4 see the QMacCocoaViewContainer. Then
 // the following code should work:
-// 
+//
 //     NSView *video = [[NSView alloc] init];
 //     QMacCocoaViewContainer *container = new QMacCocoaViewContainer(video, parent);
 //     libvlc_media_player_set_nsobject(mp, video);
@@ -600,7 +600,7 @@ func (this *Player) Size(vidnum uint) (width, height uint, err error) {
 //
 // Note: LibVLC does not support multiple pointers (it does of course support
 // multiple input devices sharing the same pointer) at the moment.
-// 
+//
 // vidnum is the number of the target video. Most commonly starts at 0.
 func (this *Player) Cursor(vidnum uint) (cx, cy int, err error) {
 	if this.ptr == nil {
@@ -998,12 +998,12 @@ func (this *Player) SetAdjustOptionFloat(option AdjustOption, v float32) error {
 // AudioOutput returns a list of available audio outputs.
 //
 // Note: Be sure to call AudioOutputList.Release() after you are done with the list.
-func (this *Player) AudioOutput() (AudioOutputList, error) {
+func (this *Player) AudioOutput(inst *Instance) (AudioOutputList, error) {
 	if this.ptr == nil {
 		return nil, syscall.EINVAL
 	}
 
-	if c := C.libvlc_audio_output_list_get(this.ptr); c != nil {
+	if c := C.libvlc_audio_output_list_get(inst.ptr); c != nil {
 		var l AudioOutputList
 		l.fromC(c)
 		return l, nil
@@ -1031,19 +1031,19 @@ func (this *Player) SetAudioOutput(output string) (err error) {
 
 // AudioDeviceCount returns the number of devices for audio output. These devices
 // are hardware oriented like analog or digital output of sound cards.
-func (this *Player) AudioDeviceCount(output string) (int, error) {
+func (this *Player) AudioDeviceCount(inst *Instance, output string) (int, error) {
 	if this.ptr == nil {
 		return 0, syscall.EINVAL
 	}
 
 	c := C.CString(output)
 	defer C.free(unsafe.Pointer(c))
-	return int(C.libvlc_audio_output_device_count(this.ptr, c)), checkError()
+	return int(C.libvlc_audio_output_device_count(inst.ptr, c)), checkError()
 }
 
 // AudioDeviceName returns the long name of an audio device.
 // If it is not available, the short name is given.
-func (this *Player) AudioDeviceName(output string, device int) (s string, err error) {
+func (this *Player) AudioDeviceName(inst *Instance, output string, device int) (s string, err error) {
 	if this.ptr == nil {
 		return "", syscall.EINVAL
 	}
@@ -1051,7 +1051,7 @@ func (this *Player) AudioDeviceName(output string, device int) (s string, err er
 	c := C.CString(output)
 	defer C.free(unsafe.Pointer(c))
 
-	if r := C.libvlc_audio_output_device_longname(this.ptr, c, C.int(device)); r != nil {
+	if r := C.libvlc_audio_output_device_longname(inst.ptr, c, C.int(device)); r != nil {
 		s = C.GoString(r)
 		C.free(unsafe.Pointer(r))
 		return
@@ -1061,7 +1061,7 @@ func (this *Player) AudioDeviceName(output string, device int) (s string, err er
 }
 
 // AudioDeviceId returns the id of an audio device.
-func (this *Player) AudioDeviceId(output string, device int) (s string, err error) {
+func (this *Player) AudioDeviceId(inst *Instance, output string, device int) (s string, err error) {
 	if this.ptr == nil {
 		return "", syscall.EINVAL
 	}
@@ -1069,7 +1069,7 @@ func (this *Player) AudioDeviceId(output string, device int) (s string, err erro
 	c := C.CString(output)
 	defer C.free(unsafe.Pointer(c))
 
-	if r := C.libvlc_audio_output_device_id(this.ptr, c, C.int(device)); r != nil {
+	if r := C.libvlc_audio_output_device_id(inst.ptr, c, C.int(device)); r != nil {
 		s = C.GoString(r)
 		C.free(unsafe.Pointer(r))
 		return
