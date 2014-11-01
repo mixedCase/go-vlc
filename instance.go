@@ -38,6 +38,72 @@ func New(argv []string) (i *Instance, err error) {
 	return
 }
 
+// AudioOutput returns a list of available audio outputs.
+//
+// Note: Be sure to call AudioOutputList.Release() after you are done with the list.
+func (this *Instance) AudioOutput() (AudioOutputList, error) {
+	if this.ptr == nil {
+		return nil, syscall.EINVAL
+	}
+
+	if c := C.libvlc_audio_output_list_get(this.ptr); c != nil {
+		var l AudioOutputList
+		l.fromC(c)
+		return l, nil
+	}
+
+	return nil, checkError()
+}
+
+// AudioDeviceCount returns the number of devices for audio output. These devices
+// are hardware oriented like analog or digital output of sound cards.
+func (this *Instance) AudioDeviceCount(output string) (int, error) {
+	if this.ptr == nil {
+		return 0, syscall.EINVAL
+	}
+
+	c := C.CString(output)
+	defer C.free(unsafe.Pointer(c))
+	return int(C.libvlc_audio_output_device_count(this.ptr, c)), checkError()
+}
+
+// AudioDeviceName returns the long name of an audio device.
+// If it is not available, the short name is given.
+func (this *Instance) AudioDeviceName(output string, device int) (s string, err error) {
+	if this.ptr == nil {
+		return "", syscall.EINVAL
+	}
+
+	c := C.CString(output)
+	defer C.free(unsafe.Pointer(c))
+
+	if r := C.libvlc_audio_output_device_longname(this.ptr, c, C.int(device)); r != nil {
+		s = C.GoString(r)
+		C.free(unsafe.Pointer(r))
+		return
+	}
+
+	return "", checkError()
+}
+
+// AudioDeviceId returns the id of an audio device.
+func (this *Instance) AudioDeviceId(output string, device int) (s string, err error) {
+	if this.ptr == nil {
+		return "", syscall.EINVAL
+	}
+
+	c := C.CString(output)
+	defer C.free(unsafe.Pointer(c))
+
+	if r := C.libvlc_audio_output_device_id(this.ptr, c, C.int(device)); r != nil {
+		s = C.GoString(r)
+		C.free(unsafe.Pointer(r))
+		return
+	}
+
+	return "", checkError()
+}
+
 // Retain increments the reference count of the Instance.
 // The initial reference count is 1 after vlc.New() returns.
 func (this *Instance) Retain() (err error) {

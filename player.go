@@ -995,23 +995,6 @@ func (this *Player) SetAdjustOptionFloat(option AdjustOption, v float32) error {
 	return checkError()
 }
 
-// AudioOutput returns a list of available audio outputs.
-//
-// Note: Be sure to call AudioOutputList.Release() after you are done with the list.
-func (this *Player) AudioOutput(inst *Instance) (AudioOutputList, error) {
-	if this.ptr == nil {
-		return nil, syscall.EINVAL
-	}
-
-	if c := C.libvlc_audio_output_list_get(inst.ptr); c != nil {
-		var l AudioOutputList
-		l.fromC(c)
-		return l, nil
-	}
-
-	return nil, checkError()
-}
-
 // SetAudioOutput sets the current audio output. Changes will be applied after
 // stop and play.
 func (this *Player) SetAudioOutput(output string) (err error) {
@@ -1027,55 +1010,6 @@ func (this *Player) SetAudioOutput(output string) (err error) {
 
 	C.free(unsafe.Pointer(c))
 	return
-}
-
-// AudioDeviceCount returns the number of devices for audio output. These devices
-// are hardware oriented like analog or digital output of sound cards.
-func (this *Player) AudioDeviceCount(inst *Instance, output string) (int, error) {
-	if this.ptr == nil {
-		return 0, syscall.EINVAL
-	}
-
-	c := C.CString(output)
-	defer C.free(unsafe.Pointer(c))
-	return int(C.libvlc_audio_output_device_count(inst.ptr, c)), checkError()
-}
-
-// AudioDeviceName returns the long name of an audio device.
-// If it is not available, the short name is given.
-func (this *Player) AudioDeviceName(inst *Instance, output string, device int) (s string, err error) {
-	if this.ptr == nil {
-		return "", syscall.EINVAL
-	}
-
-	c := C.CString(output)
-	defer C.free(unsafe.Pointer(c))
-
-	if r := C.libvlc_audio_output_device_longname(inst.ptr, c, C.int(device)); r != nil {
-		s = C.GoString(r)
-		C.free(unsafe.Pointer(r))
-		return
-	}
-
-	return "", checkError()
-}
-
-// AudioDeviceId returns the id of an audio device.
-func (this *Player) AudioDeviceId(inst *Instance, output string, device int) (s string, err error) {
-	if this.ptr == nil {
-		return "", syscall.EINVAL
-	}
-
-	c := C.CString(output)
-	defer C.free(unsafe.Pointer(c))
-
-	if r := C.libvlc_audio_output_device_id(inst.ptr, c, C.int(device)); r != nil {
-		s = C.GoString(r)
-		C.free(unsafe.Pointer(r))
-		return
-	}
-
-	return "", checkError()
 }
 
 // SetAudioDevice sets the current audio output device. Changes will be applied after
