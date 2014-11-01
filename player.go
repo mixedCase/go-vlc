@@ -998,12 +998,12 @@ func (this *Player) SetAdjustOptionFloat(option AdjustOption, v float32) error {
 // AudioOutput returns a list of available audio outputs.
 //
 // Note: Be sure to call AudioOutputList.Release() after you are done with the list.
-func (this *Player) AudioOutput(inst *C.libvlc_instance_t) (AudioOutputList, error) {
-	if inst == nil {
+func (this *Player) AudioOutput(inst *Instance) (AudioOutputList, error) {
+	if this.ptr == nil {
 		return nil, syscall.EINVAL
 	}
 
-	if c := C.libvlc_audio_output_list_get(inst); c != nil {
+	if c := C.libvlc_audio_output_list_get(inst.ptr); c != nil {
 		var l AudioOutputList
 		l.fromC(c)
 		return l, nil
@@ -1031,19 +1031,19 @@ func (this *Player) SetAudioOutput(output string) (err error) {
 
 // AudioDeviceCount returns the number of devices for audio output. These devices
 // are hardware oriented like analog or digital output of sound cards.
-func (this *Player) AudioDeviceCount(inst *C.libvlc_instance_t, output string) (int, error) {
+func (this *Player) AudioDeviceCount(inst *Instance, output string) (int, error) {
 	if this.ptr == nil {
 		return 0, syscall.EINVAL
 	}
 
 	c := C.CString(output)
 	defer C.free(unsafe.Pointer(c))
-	return int(C.libvlc_audio_output_device_count(inst, c)), checkError()
+	return int(C.libvlc_audio_output_device_count(inst.ptr, c)), checkError()
 }
 
 // AudioDeviceName returns the long name of an audio device.
 // If it is not available, the short name is given.
-func (this *Player) AudioDeviceName(inst *C.libvlc_instance_t, output string, device int) (s string, err error) {
+func (this *Player) AudioDeviceName(inst *Instance, output string, device int) (s string, err error) {
 	if this.ptr == nil {
 		return "", syscall.EINVAL
 	}
@@ -1051,7 +1051,7 @@ func (this *Player) AudioDeviceName(inst *C.libvlc_instance_t, output string, de
 	c := C.CString(output)
 	defer C.free(unsafe.Pointer(c))
 
-	if r := C.libvlc_audio_output_device_longname(inst, c, C.int(device)); r != nil {
+	if r := C.libvlc_audio_output_device_longname(inst.ptr, c, C.int(device)); r != nil {
 		s = C.GoString(r)
 		C.free(unsafe.Pointer(r))
 		return
@@ -1061,7 +1061,7 @@ func (this *Player) AudioDeviceName(inst *C.libvlc_instance_t, output string, de
 }
 
 // AudioDeviceId returns the id of an audio device.
-func (this *Player) AudioDeviceId(inst *C.libvlc_instance_t, output string, device int) (s string, err error) {
+func (this *Player) AudioDeviceId(inst *Instance, output string, device int) (s string, err error) {
 	if this.ptr == nil {
 		return "", syscall.EINVAL
 	}
@@ -1069,7 +1069,7 @@ func (this *Player) AudioDeviceId(inst *C.libvlc_instance_t, output string, devi
 	c := C.CString(output)
 	defer C.free(unsafe.Pointer(c))
 
-	if r := C.libvlc_audio_output_device_id(inst, c, C.int(device)); r != nil {
+	if r := C.libvlc_audio_output_device_id(inst.ptr, c, C.int(device)); r != nil {
 		s = C.GoString(r)
 		C.free(unsafe.Pointer(r))
 		return
