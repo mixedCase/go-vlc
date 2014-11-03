@@ -49,10 +49,11 @@ func ChangeSet() string { return C.GoString(C.libvlc_get_changeset()) }
 
 // checkError checks if there is a new error message available. If so, return
 // it as an os.Error. For internal use only.
-func checkError() (err error) {
-	if c := C.libvlc_errmsg(); c != nil {
-		err = errors.New(C.GoString(c))
+func checkError() error {
+	c := C.libvlc_errmsg()
+	if c != nil {
+		return errors.New(C.GoString(c))
 		C.free(unsafe.Pointer(c))
 	}
-	return
+	return nil
 }
