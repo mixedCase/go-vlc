@@ -15,7 +15,6 @@ package vlc
 import "C"
 import (
 	"errors"
-	"unsafe"
 )
 
 // libVLC version numbers.
@@ -53,7 +52,6 @@ func checkError() error {
 	c := C.libvlc_errmsg()
 	if c != nil {
 		return errors.New(C.GoString(c))
-		C.free(unsafe.Pointer(c))
 	}
 	return nil
 }
