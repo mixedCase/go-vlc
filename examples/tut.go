@@ -10,7 +10,7 @@ package main
 
 import (
 	"fmt"
-	vlc "github.com/cvanderschuere/go-vlc"
+	vlc "github.com/jteeuwen/go-vlc"
 	"os"
 	"time"
 )
