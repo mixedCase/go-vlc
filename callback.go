@@ -13,9 +13,10 @@ import (
 
 // Used when hooking/unhooking events.
 type eventData struct {
-	t C.libvlc_event_type_t
-	f EventHandler
-	d interface{}
+	id int
+	t  C.libvlc_event_type_t
+	f  EventHandler
+	d  interface{}
 }
 
 // Event callback handler.
@@ -28,9 +29,14 @@ func goEventCB(ep unsafe.Pointer, userdata unsafe.Pointer) {
 	evt := &Event{Type: EventType(e._type)}
 	evt.b.Write(e.u[:])
 
-	if rd := (*eventData)(userdata); rd.f != nil {
-		rd.f(evt, rd.d)
+	idptr := (*int)(userdata)
+	eventsLock.RLock()
+	ed, ok := events[*idptr]
+	eventsLock.RUnlock()
+	if !ok {
+		return // event data not found
 	}
+	ed.f(evt, ed.d)
 }
 
 // Used in Player.SetCallbacks() to render video to a custom memory location.

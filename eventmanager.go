@@ -16,44 +16,61 @@ package vlc
 // }
 import "C"
 import (
-	"syscall"
+	"github.com/GeertJohan/go.incremental"
 	"sync"
+	"syscall"
 	"unsafe"
+)
+
+var (
+	// because the go callback handler is not aware of EventManagers, and must still be ----
+	events     = make(map[int]*eventData)
+	eventsInc  incremental.Int
+	eventsLock sync.RWMutex
 )
 
 // A libvlc instance has an event manager which can be used to hook event callbacks,
 type EventManager struct {
-	ptr    *C.libvlc_event_manager_t
-	events map[int]*eventData
-	m      *sync.Mutex
+	ptr *C.libvlc_event_manager_t
+	m   *sync.Mutex
 }
 
 func NewEventManager(p *C.libvlc_event_manager_t) *EventManager {
-	v := new(EventManager)
-	v.ptr = p
-	v.m = new(sync.Mutex)
-	v.events = make(map[int]*eventData)
-	return v
+	ev := &EventManager{
+		ptr: p,
+	}
+	return ev
 }
 
 // Attach registers the given event handler and returns a unique id
 // we can use to detach the event at a later point.
-func (this *EventManager) Attach(et EventType, cb EventHandler, userdata interface{}) (id int, err error) {
+func (this *EventManager) Attach(et EventType, cb EventHandler, userdata interface{}) (int, error) {
 	if this.ptr == nil {
 		return 0, syscall.EINVAL
 	}
-
-	id = this.getUniqId()
-
-	this.m.Lock()
-	this.events[id] = &eventData{C.libvlc_event_type_t(et), cb, userdata}
-	this.m.Unlock()
-
-	if C.goAttach(this.ptr, this.events[id].t, unsafe.Pointer(this.events[id])) != 0 {
-		err = checkError()
+	if cb == nil {
+		panic("cannot attach nil EventHandler")
 	}
 
-	return
+	ed := &eventData{
+		id: eventsInc.Next(),
+		t:  C.libvlc_event_type_t(et),
+		f:  cb,
+		d:  userdata,
+	}
+
+	eventsLock.Lock()
+	events[ed.id] = ed
+	eventsLock.Unlock()
+
+	if C.goAttach(this.ptr, ed.t, unsafe.Pointer(&ed.id)) != 0 {
+		err := checkError()
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	return ed.id, nil
 }
 
 // Detach unregisters the given event id.
@@ -65,33 +82,15 @@ func (this *EventManager) Detach(id int) (err error) {
 	var ed *eventData
 	var ok bool
 
-	this.m.Lock()
-	if ed, ok = this.events[id]; !ok {
-		this.m.Unlock()
+	eventsLock.Lock()
+	if ed, ok = events[id]; !ok {
+		eventsLock.Unlock()
 		return syscall.EINVAL
 	}
 
-	delete(this.events, id)
-	this.m.Unlock()
+	delete(events, id)
+	eventsLock.Unlock()
 
-	C.goDetach(this.ptr, ed.t, unsafe.Pointer(ed))
+	C.goDetach(this.ptr, ed.t, unsafe.Pointer(&ed.id))
 	return
-}
-
-// getUniqId finds and returns a unique event id.
-func (this *EventManager) getUniqId() int {
-	var id int
-	var ok bool
-
-	this.m.Lock()
-	defer this.m.Unlock()
-
-	for {
-		if _, ok = this.events[id]; !ok {
-			break
-		}
-		id++
-	}
-
-	return id
 }
