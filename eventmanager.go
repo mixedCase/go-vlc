@@ -16,7 +16,6 @@ package vlc
 // }
 import "C"
 import (
-	"github.com/GeertJohan/go.incremental"
 	"sync"
 	"syscall"
 	"unsafe"
@@ -25,7 +24,7 @@ import (
 var (
 	// because the go callback handler is not aware of EventManagers, and must still be ----
 	events     = make(map[int]*eventData)
-	eventsInc  incremental.Int
+	eventsInc  IncrementalInt
 	eventsLock sync.RWMutex
 )
 
