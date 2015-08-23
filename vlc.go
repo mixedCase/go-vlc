@@ -5,13 +5,11 @@
 // Go bindings for libVLC 1.1.9.
 package vlc
 
-// #cgo        LDFLAGS: -lvlc
-// #cgo  linux  CFLAGS: -I/usr/local/include
-// #cgo  linux LDFLAGS: -L/usr/local/lib
-// #cgo darwin  CFLAGS: -I/usr/local/include
-// #cgo darwin LDFLAGS: -L/usr/local/lib
-//#include <stdlib.h>
-//#include <vlc/vlc.h>
+// #cgo           LDFLAGS: -lvlc
+// #cgo  linux pkg-config: libvlc
+// #cgo darwin pkg-config: libvlc
+// #include <stdlib.h>
+// #include <vlc/vlc.h>
 import "C"
 import (
 	"errors"
