@@ -285,8 +285,8 @@ func (this *Media) TrackInfo() ([]*TrackInfo, error) {
 		return nil, syscall.EINVAL
 	}
 
-	var c *C.libvlc_media_track_info_t
-	if size := C.libvlc_media_get_tracks_info(this.ptr, &c); size > 0 {
+	var c **C.libvlc_media_track_t
+	if size := C.libvlc_media_tracks_get(this.ptr, &c); size > 0 {
 		list := make([]*TrackInfo, size)
 		addr := uintptr(unsafe.Pointer(c))
 		sz := int(unsafe.Sizeof(c))
