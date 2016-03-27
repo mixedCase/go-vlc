@@ -55,6 +55,22 @@ func (this *Instance) AudioOutput() (AudioOutputList, error) {
 	return nil, checkError()
 }
 
+func (vlc *Instance) vlcAudioOutputDeviceListGet(output string) *C.libvlc_audio_output_device_t {
+	c := C.CString(output)
+	defer C.free(unsafe.Pointer(c))
+	return C.libvlc_audio_output_device_list_get(vlc.ptr, c)
+}
+
+func (vlc *Instance) vlcAudioOutputDeviceGet(output string, index int) *C.libvlc_audio_output_device_t {
+	devices := vlc.vlcAudioOutputDeviceListGet(output)
+
+	for index > 1 {
+		index--
+		devices = devices.p_next
+	}
+	return devices
+}
+
 // AudioDeviceCount returns the number of devices for audio output. These devices
 // are hardware oriented like analog or digital output of sound cards.
 func (this *Instance) AudioDeviceCount(output string) (int, error) {
@@ -62,9 +78,13 @@ func (this *Instance) AudioDeviceCount(output string) (int, error) {
 		return 0, syscall.EINVAL
 	}
 
-	c := C.CString(output)
-	defer C.free(unsafe.Pointer(c))
-	return int(C.libvlc_audio_output_device_count(this.ptr, c)), checkError()
+	count := 0
+	devices := this.vlcAudioOutputDeviceListGet(output)
+	for devices != nil {
+		count++
+		devices = devices.p_next
+	}
+	return count, checkError()
 }
 
 // AudioDeviceName returns the long name of an audio device.
@@ -74,12 +94,9 @@ func (this *Instance) AudioDeviceName(output string, device int) (s string, err 
 		return "", syscall.EINVAL
 	}
 
-	c := C.CString(output)
-	defer C.free(unsafe.Pointer(c))
-
-	if r := C.libvlc_audio_output_device_longname(this.ptr, c, C.int(device)); r != nil {
-		s = C.GoString(r)
-		C.free(unsafe.Pointer(r))
+	r := this.vlcAudioOutputDeviceGet(output, device)
+	if r != nil {
+		s = C.GoString(r.psz_description)
 		return
 	}
 
@@ -95,9 +112,9 @@ func (this *Instance) AudioDeviceId(output string, device int) (s string, err er
 	c := C.CString(output)
 	defer C.free(unsafe.Pointer(c))
 
-	if r := C.libvlc_audio_output_device_id(this.ptr, c, C.int(device)); r != nil {
-		s = C.GoString(r)
-		C.free(unsafe.Pointer(r))
+	r := this.vlcAudioOutputDeviceGet(output, device)
+	if r != nil {
+		s = C.GoString(r.psz_device)
 		return
 	}
 
