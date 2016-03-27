@@ -1027,29 +1027,6 @@ func (this *Player) SetAudioDevice(output, deviceid string) (err error) {
 	return
 }
 
-// AudioDeviceType return the current audio device type.
-// Device type describes something like character of output sound - stereo
-// sound, 2.1, 5.1 etc
-func (this *Player) AudioDeviceType() (AudioDevice, error) {
-	if this.ptr == nil {
-		return 0, syscall.EINVAL
-	}
-
-	return AudioDevice(C.libvlc_audio_output_get_device_type(this.ptr)), checkError()
-}
-
-// SetAudioDeviceType sets the current audio device type.
-// Device type describes something like character of output sound - stereo
-// sound, 2.1, 5.1 etc
-func (this *Player) SetAudioDeviceType(ad AudioDevice) error {
-	if this.ptr == nil {
-		return syscall.EINVAL
-	}
-
-	C.libvlc_audio_output_set_device_type(this.ptr, C.int(ad))
-	return checkError()
-}
-
 // ToggleMute toggles the current mute status.
 func (this *Player) ToggleMute() error {
 	if this.ptr == nil {
