@@ -4,8 +4,12 @@
 
 package vlc
 
-//#include <stdlib.h>
-//#include <vlc/vlc.h>
+/*
+#include <stdlib.h>
+#include <vlc/vlc.h>
+void waitCallback_cgo(void *);
+typedef void (*exit_callback_t)(void *);
+*/
 import "C"
 import (
 	"syscall"
@@ -185,8 +189,17 @@ func (this *Instance) Wait() error {
 		return syscall.EINVAL
 	}
 
-	C.libvlc_wait(this.ptr)
+	wait := make(chan bool, 1)
+
+	C.libvlc_set_exit_handler(this.ptr, (C.exit_callback_t)(unsafe.Pointer(C.waitCallback_cgo)), unsafe.Pointer(&wait))
+	<-wait
 	return nil
+}
+
+//export waitCallback
+func waitCallback(p unsafe.Pointer) {
+	wait := (*chan bool)(p)
+	*wait <- true
 }
 
 /*
