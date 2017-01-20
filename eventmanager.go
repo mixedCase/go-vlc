@@ -62,7 +62,9 @@ func (this *EventManager) Attach(et EventType, cb EventHandler, userdata interfa
 	events[ed.id] = ed
 	eventsLock.Unlock()
 
-	if C.goAttach(this.ptr, ed.t, unsafe.Pointer(&ed.id)) != 0 {
+	id := ed.id
+
+	if C.goAttach(this.ptr, ed.t, unsafe.Pointer(&id)) != 0 {
 		err := checkError()
 		if err != nil {
 			return 0, err
@@ -90,6 +92,8 @@ func (this *EventManager) Detach(id int) (err error) {
 	delete(events, id)
 	eventsLock.Unlock()
 
-	C.goDetach(this.ptr, ed.t, unsafe.Pointer(&ed.id))
+	id := ed.id
+
+	C.goDetach(this.ptr, ed.t, unsafe.Pointer(&id))
 	return
 }
